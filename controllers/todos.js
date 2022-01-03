@@ -12,100 +12,61 @@ const todos = [
 const pool = require('../config/database')
 
 /** Avec mariadb */
+
+/** Crée une connexion à la db et appelle la procédure call avec des paramères optionnels */ 
+const fetchDB = async (call, param = []) => {
+    let connexion;
+    try {
+        connexion = await pool.getConnection();
+        const result = await connexion.query(call, param);
+        return result;
+    } catch (error) {
+        return error.message;
+    } finally {
+        if (connexion) connexion.end();
+    }
+}
+
 module.exports = {
     /** Insérer une todo */
     insertTodo: async (req, res) => {
         const { texte } = req.body;
-        let connexion;
-        try {
-            connexion = await pool.getConnection();
-            const result = await connexion.query('CALL insertTodo(?);',[texte]);
-            console.log(result);
-            return res.status(200).json({ succes: result });
-        } catch (error) {
-            return res.status(400).json({ error: error.message });
-        } finally {
-            if (connexion) connexion.end;
-        };
+        const result = await fetchDB('CALL insertTodo(?);',[texte]);
+        return res.status(200).json({ succes: "Une nouvelle todo a été ajoutée. ", task: result });
     },
 
     /** Afficher toutes les todo */
     getAllTodos: async ( _ , res) => {
-        let connexion;
-        try {
-            connexion = await pool.getConnection();
-            const result = await connexion.query('CALL getAllTodos();');
-            console.log(result);
-            return res.status(200).json({ succes: result });
-        } catch (error) {
-            return res.status(400).json({ error: error.message });
-        } finally {
-            if (connexion) connexion.end;
-        }
+        const result = await fetchDB('CALL getAllTodos;');
+        return res.status(200).json({ succes: "Voici la liste des todos. ", task: result[0] });
     },
 
     /** Afficher une todo */
     getTodoById: async (req, res) => {
         const { id } = req.params;
-        let connexion;
-        try {
-            connexion = await pool.getConnection();
-            const result = await connexion.query('CALL getTodoById(?);',[id]);
-            console.log(result);
-            return res.status(200).json({ succes: result });
-        } catch (error) {
-            return res.status(400).json({ error: error.message });
-        } finally {
-            if (connexion) connexion.end;
-        }
+        const result = await fetchDB('CALL getTodoById(?);',[id]);
+        return res.status(200).json({ succes: `Voici la todo ${id} : `, task: result[0] });
     },
 
     /**Mettre à jour une todo */
     updateTodoById: async (req, res) => {
         const { id }  = req.params;
         const { texte } = req.body;
-        let connexion;
-        try {
-            connexion = await pool.getConnection();
-            const result = await connexion.query('CALL updateTodoById(?,?);', [id, texte]);
-            console.log(result);
-            return res.status(200).json({ succes: result });
-        } catch (error) {
-            return res.status(400).json({ error: error.message });
-        } finally {
-            if (connexion) connexion.end;
-        }
+        const result = await fetchDB('CALL updateTodoById(?,?);', [id, texte]);
+        return res.status(200).json({ succes: `La todo ${id} a bien été mise à jour. `, task: result[0] });
     },
 
     /** Supprimer toutes les todos */
     deleteAllTodos: async ( _ , res) => {
-        let connexion;
-        try {
-            connexion = await pool.getConnection();
-            const result = await connexion.query('CALL deleteAllTodos();');
-            console.log(result);
-            return res.status(200).json({ succes: result });
-        } catch (error) {
-            return res.status(400).json({ error: error.message });
-        } finally {
-            if (connexion) connexion.end;
-        }
+        const result = await fetchDB('CALL deleteAllTodos();');
+        return res.status(200).json({ succes: "Toutes les todos ont été supprimées. ", task: result[0] });
     },
 
     /** Supprimer une todo */
     deleteTodoById: async (req, res) => {
         const { id }  = req.params;
-        let connexion;
-        try {
-            connexion = await pool.getConnection();
-            const result = await connexion.query('CALL deleteTodoById(?);',[id]);
-            console.log(result);
-            return res.status(200).json({ succes: result });
-        } catch (error) {
-            return res.status(400).json({ error: error.message });
-        } finally {
-            if (connexion) connexion.end;
-        }
+        const result = await fetchDB('CALL deleteTodoById(?);',[id]);
+        return res.status(200).json({ succes: `La todo ${id} a été supprimée. `, task: result[0] });
     }
 };
 
